@@ -1,0 +1,22 @@
+{
+  "name": "Smart Home Control",
+  "short_name": "Smart Home",
+  "description": "Control total de tu hogar inteligente",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1d2e",
+  "theme_color": "#a78bfa",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "/icon-192.jpg",
+      "sizes": "192x192",
+      "type": "image/jpg"
+    },
+    {
+      "src": "/icon-512.jpg",
+      "sizes": "512x512",
+      "type": "image/jpg"
+    }
+  ]
+}
