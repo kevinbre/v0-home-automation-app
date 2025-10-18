@@ -1,16 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+  TabletDialog,
+  TabletDialogContent,
+  TabletDialogHeader,
+  TabletDialogTitle,
+  TabletDialogDescription,
+} from "@/components/ui/tablet-dialog"
+import { TabletInput } from "@/components/ui/tablet-input"
 import {
   Select,
   SelectContent,
@@ -114,7 +114,7 @@ export function TvSettingsModal({ open, onOpenChange, tvs, onTvsChange }: TvSett
     onTvsChange(updatedTvs)
     localStorage.setItem("smartTvs", JSON.stringify(updatedTvs))
     setIsAddingNew(false)
-    setEditForm({ name: "", location: "", ipAddress: "", brand: "philips" })
+    setEditForm({ name: "", location: "", ipAddress: "", brand: "philips", useAdb: false })
   }
 
   const handleEdit = (tv: SmartTV) => {
@@ -310,14 +310,14 @@ export function TvSettingsModal({ open, onOpenChange, tvs, onTvsChange }: TvSett
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="glass-strong border-white/10 max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Configuración de TVs</DialogTitle>
-          <DialogDescription>
+      <TabletDialog open={open} onOpenChange={onOpenChange}>
+        <TabletDialogContent className="glass-strong border-white/10" size="lg">
+        <TabletDialogHeader>
+          <TabletDialogTitle>Configuración de TVs</TabletDialogTitle>
+          <TabletDialogDescription>
             Administra tus Smart TVs. Agrega, edita o elimina dispositivos.
-          </DialogDescription>
-        </DialogHeader>
+          </TabletDialogDescription>
+        </TabletDialogHeader>
 
         <div className="space-y-4 mt-4">
           {/* Lista de TVs */}
@@ -329,7 +329,7 @@ export function TvSettingsModal({ open, onOpenChange, tvs, onTvsChange }: TvSett
                 <div className="space-y-3">
                   <div>
                     <Label htmlFor="edit-name">Nombre</Label>
-                    <Input
+                    <TabletInput
                       id="edit-name"
                       value={editForm.name}
                       onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
@@ -339,7 +339,7 @@ export function TvSettingsModal({ open, onOpenChange, tvs, onTvsChange }: TvSett
                   </div>
                   <div>
                     <Label htmlFor="edit-location">Ubicación</Label>
-                    <Input
+                    <TabletInput
                       id="edit-location"
                       value={editForm.location}
                       onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
@@ -349,7 +349,7 @@ export function TvSettingsModal({ open, onOpenChange, tvs, onTvsChange }: TvSett
                   </div>
                   <div>
                     <Label htmlFor="edit-ip">Dirección IP</Label>
-                    <Input
+                    <TabletInput
                       id="edit-ip"
                       value={editForm.ipAddress}
                       onChange={(e) => setEditForm({ ...editForm, ipAddress: e.target.value })}
@@ -499,7 +499,7 @@ export function TvSettingsModal({ open, onOpenChange, tvs, onTvsChange }: TvSett
               <h3 className="font-semibold">Agregar Nuevo TV</h3>
               <div>
                 <Label htmlFor="new-name">Nombre</Label>
-                <Input
+                <TabletInput
                 id="new-name"
                 value={editForm.name}
                 onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
@@ -509,7 +509,7 @@ export function TvSettingsModal({ open, onOpenChange, tvs, onTvsChange }: TvSett
               </div>
               <div>
                 <Label htmlFor="new-location">Ubicación</Label>
-                <Input
+                <TabletInput
                 id="new-location"
                 value={editForm.location}
                 onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
@@ -519,7 +519,7 @@ export function TvSettingsModal({ open, onOpenChange, tvs, onTvsChange }: TvSett
               </div>
               <div>
                 <Label htmlFor="new-ip">Dirección IP</Label>
-                <Input
+                <TabletInput
                 id="new-ip"
                 value={editForm.ipAddress}
                 onChange={(e) => setEditForm({ ...editForm, ipAddress: e.target.value })}
@@ -569,7 +569,7 @@ export function TvSettingsModal({ open, onOpenChange, tvs, onTvsChange }: TvSett
                 variant="outline"
                 onClick={() => {
                   setIsAddingNew(false)
-                  setEditForm({ name: "", location: "", ipAddress: "", brand: "philips" })
+                  setEditForm({ name: "", location: "", ipAddress: "", brand: "philips", useAdb: false })
                 }}
                 className="flex-1 rounded-xl bg-transparent"
                 >
@@ -585,18 +585,18 @@ export function TvSettingsModal({ open, onOpenChange, tvs, onTvsChange }: TvSett
             </Button>
           )}
         </div>
-        </DialogContent>
-      </Dialog>
+        </TabletDialogContent>
+      </TabletDialog>
 
       {/* Modal de Pairing ADB */}
-      <Dialog open={!!pairingTvId} onOpenChange={() => cancelPairing()}>
-        <DialogContent className="glass-strong border-white/10 max-w-md">
-          <DialogHeader>
-            <DialogTitle>Vincular TV con ADB</DialogTitle>
-            <DialogDescription>
+      <TabletDialog open={!!pairingTvId} onOpenChange={() => cancelPairing()}>
+        <TabletDialogContent className="glass-strong border-white/10" size="md">
+          <TabletDialogHeader>
+            <TabletDialogTitle>Vincular TV con ADB</TabletDialogTitle>
+            <TabletDialogDescription>
               {tvs.find((t) => t.id === pairingTvId)?.name}
-            </DialogDescription>
-          </DialogHeader>
+            </TabletDialogDescription>
+          </TabletDialogHeader>
 
           <div className="space-y-4 mt-4">
             {/* Instrucciones */}
@@ -614,7 +614,7 @@ export function TvSettingsModal({ open, onOpenChange, tvs, onTvsChange }: TvSett
 
                 <div>
                   <Label htmlFor="pairing-port">Puerto (del TV)</Label>
-                  <Input
+                  <TabletInput
                     id="pairing-port"
                     value={pairingPort}
                     onChange={(e) => setPairingPort(e.target.value)}
@@ -629,7 +629,7 @@ export function TvSettingsModal({ open, onOpenChange, tvs, onTvsChange }: TvSett
 
                 <div>
                   <Label htmlFor="pairing-code">Código de vinculación</Label>
-                  <Input
+                  <TabletInput
                     id="pairing-code"
                     value={pairingCode}
                     onChange={(e) => setPairingCode(e.target.value)}
@@ -696,8 +696,8 @@ export function TvSettingsModal({ open, onOpenChange, tvs, onTvsChange }: TvSett
                 </div>
               )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </TabletDialogContent>
+      </TabletDialog>
     </>
   )
 }

@@ -4,7 +4,7 @@ import { YoutubeSection } from "@/components/youtube-section"
 import { WeatherWidget } from "@/components/weather-widget"
 import { CalendarWidget } from "@/components/calendar-widget"
 import { HueLightsWidget } from "@/components/hue-lights-widget"
-import { TvYoutubeControl } from "@/components/tv-youtube-control"
+import { TvControlEnhanced } from "@/components/tv-control-enhanced"
 
 
 export default function HomePage() {
@@ -30,7 +30,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <TvYoutubeControl />
+            <TvControlEnhanced />
             <YoutubeSection />
           </div>
         </div>
