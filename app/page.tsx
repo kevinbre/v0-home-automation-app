@@ -1,11 +1,11 @@
 import { DashboardHeader } from "@/components/dashboard-header"
 import { QuickActions } from "@/components/quick-actions"
-import { DeviceGrid } from "@/components/device-grid"
-import { SceneCards } from "@/components/scene-cards"
 import { YoutubeSection } from "@/components/youtube-section"
 import { WeatherWidget } from "@/components/weather-widget"
 import { CalendarWidget } from "@/components/calendar-widget"
-import { EnergyWidget } from "@/components/energy-widget"
+import { HueLightsWidget } from "@/components/hue-lights-widget"
+import { TvYoutubeControl } from "@/components/tv-youtube-control"
+
 
 export default function HomePage() {
   return (
@@ -26,15 +26,13 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <WeatherWidget />
             <CalendarWidget />
-            <EnergyWidget />
+            <HueLightsWidget />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <SceneCards />
+            <TvYoutubeControl />
             <YoutubeSection />
           </div>
-
-          <DeviceGrid />
         </div>
       </div>
     </div>

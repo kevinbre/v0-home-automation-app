@@ -1,4 +1,5 @@
-import { LightsControl } from "@/components/lights-control"
+
+import { LightsControlRedesigned } from "@/components/lights-control-redesigned"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
@@ -13,32 +14,28 @@ export default function LightsPage() {
           className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[oklch(0.55_0.22_280)] rounded-full blur-[120px] opacity-15 animate-pulse"
           style={{ animationDelay: "1s" }}
         />
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[oklch(0.60_0.20_200)] rounded-full blur-[100px] opacity-10 animate-pulse"
-          style={{ animationDelay: "2s" }}
-        />
       </div>
 
       <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <div className="glass rounded-3xl p-6 mb-6 transition-smooth hover:shadow-2xl">
+        <div className="glass rounded-3xl p-6 mb-6">
           <div className="flex items-center gap-4">
             <Link href="/">
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-2xl glass-strong transition-smooth hover:scale-105"
+                className="rounded-2xl glass-strong"
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Control de Luces Philips Hue</h1>
-              <p className="text-sm text-muted-foreground mt-1">Gestiona todas tus luces inteligentes en tiempo real</p>
+              <h1 className="text-3xl font-bold tracking-tight">Philips Hue</h1>
+              <p className="text-sm text-muted-foreground mt-1">Control total de tus luces inteligentes</p>
             </div>
           </div>
         </div>
 
-        <LightsControl />
+        <LightsControlRedesigned />
       </div>
     </div>
   )

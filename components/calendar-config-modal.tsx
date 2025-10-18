@@ -8,7 +8,7 @@ import { X, Plus, Trash2 } from "lucide-react"
 interface CalendarConfig {
   id: string
   name: string
-  email: string
+  icalUrl: string
   color: string
 }
 
@@ -20,34 +20,42 @@ export default function CalendarConfigModal({ onClose }: CalendarConfigModalProp
   const [calendars, setCalendars] = useState<CalendarConfig[]>([])
   const [newCalendar, setNewCalendar] = useState({
     name: "",
-    email: "",
+    icalUrl: "",
     color: "oklch(0.6 0.25 250)",
   })
 
   useEffect(() => {
-    const savedCalendars = localStorage.getItem("googleCalendars")
+    const savedCalendars = localStorage.getItem("icalCalendars")
     if (savedCalendars) {
       setCalendars(JSON.parse(savedCalendars))
     }
   }, [])
 
   const handleAddCalendar = () => {
-    if (newCalendar.name && newCalendar.email) {
+    if (newCalendar.name && newCalendar.icalUrl) {
+      // Validar que sea una URL válida
+      try {
+        new URL(newCalendar.icalUrl)
+      } catch {
+        alert("Por favor ingresa una URL válida")
+        return
+      }
+
       const calendar: CalendarConfig = {
         id: `calendar-${Date.now()}`,
         ...newCalendar,
       }
       const updatedCalendars = [...calendars, calendar]
       setCalendars(updatedCalendars)
-      localStorage.setItem("googleCalendars", JSON.stringify(updatedCalendars))
-      setNewCalendar({ name: "", email: "", color: "oklch(0.6 0.25 250)" })
+      localStorage.setItem("icalCalendars", JSON.stringify(updatedCalendars))
+      setNewCalendar({ name: "", icalUrl: "", color: "oklch(0.6 0.25 250)" })
     }
   }
 
   const handleRemoveCalendar = (id: string) => {
     const updatedCalendars = calendars.filter((c) => c.id !== id)
     setCalendars(updatedCalendars)
-    localStorage.setItem("googleCalendars", JSON.stringify(updatedCalendars))
+    localStorage.setItem("icalCalendars", JSON.stringify(updatedCalendars))
   }
 
   const handleClose = () => {
@@ -78,23 +86,26 @@ export default function CalendarConfigModal({ onClose }: CalendarConfigModalProp
             <h3 className="font-semibold mb-3">Agregar Nuevo Calendario</h3>
             <div className="space-y-3">
               <div>
-                <label className="text-sm font-medium mb-2 block">Nombre</label>
+                <label className="text-sm font-medium mb-2 block">Nombre del Calendario</label>
                 <Input
                   value={newCalendar.name}
                   onChange={(e) => setNewCalendar({ ...newCalendar, name: e.target.value })}
-                  placeholder="Ej: Personal, Trabajo"
+                  placeholder="Ej: Mi Calendario, Trabajo"
                   className="glass rounded-xl border-white/10"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Email de Google</label>
+                <label className="text-sm font-medium mb-2 block">URL iCal del Calendario</label>
                 <Input
-                  value={newCalendar.email}
-                  onChange={(e) => setNewCalendar({ ...newCalendar, email: e.target.value })}
-                  placeholder="ejemplo@gmail.com"
-                  type="email"
+                  value={newCalendar.icalUrl}
+                  onChange={(e) => setNewCalendar({ ...newCalendar, icalUrl: e.target.value })}
+                  placeholder="https://calendar.google.com/calendar/ical/..."
+                  type="url"
                   className="glass rounded-xl border-white/10"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Pegá la URL secreta en formato iCal de Google Calendar
+                </p>
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">Color</label>
@@ -127,18 +138,18 @@ export default function CalendarConfigModal({ onClose }: CalendarConfigModalProp
             ) : (
               calendars.map((calendar) => (
                 <div key={calendar.id} className="glass rounded-2xl p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: calendar.color }} />
-                    <div>
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: calendar.color }} />
+                    <div className="min-w-0 flex-1">
                       <p className="font-medium text-sm">{calendar.name}</p>
-                      <p className="text-xs text-muted-foreground">{calendar.email}</p>
+                      <p className="text-xs text-muted-foreground truncate">{calendar.icalUrl}</p>
                     </div>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveCalendar(calendar.id)}
-                    className="rounded-xl hover:bg-red-500/20"
+                    className="rounded-xl hover:bg-red-500/20 flex-shrink-0"
                   >
                     <Trash2 className="w-4 h-4 text-red-400" />
                   </Button>
@@ -148,12 +159,14 @@ export default function CalendarConfigModal({ onClose }: CalendarConfigModalProp
           </div>
 
           <div className="glass rounded-2xl p-4 bg-blue-500/10 border border-blue-500/20">
-            <p className="text-xs font-medium mb-2">📝 Próximos pasos</p>
+            <p className="text-xs font-medium mb-2">📝 Cómo obtener la URL iCal</p>
             <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-              <li>Ve a Google Calendar API Console</li>
-              <li>Crea credenciales OAuth 2.0</li>
-              <li>Implementa la autenticación en el código</li>
-              <li>Los eventos se sincronizarán automáticamente</li>
+              <li>Ve a Google Calendar en tu navegador</li>
+              <li>Haz clic en los 3 puntos (⋮) junto a tu calendario</li>
+              <li>Selecciona "Configuración y uso compartido"</li>
+              <li>Scrollea hasta "Integrar calendario"</li>
+              <li>Copia la "Dirección secreta en formato iCal"</li>
+              <li>Pégala aquí arriba</li>
             </ol>
           </div>
 
