@@ -125,43 +125,70 @@ export function TvControlEnhanced() {
 
       // Búsqueda contextual según la app
       if (currentApp === "com.google.android.youtube.tv") {
-        const response = await fetch(apiEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tvIp: selectedTv.ipAddress,
-            command: selectedTv.useAdb ? "openYouTubeSearch" : "launchApp",
-            value: selectedTv.useAdb ? searchQuery : {
-              intent: {
-                component: {
-                  packageName: "com.google.android.youtube.tv",
-                  className: "com.google.android.apps.youtube.tv.activity.ShellActivity"
-                },
-                action: "android.intent.action.SEARCH",
-                extras: {
-                  query: searchQuery
+        if (selectedTv.useAdb) {
+          // Para ADB: usar el comando específico de YouTube
+          const response = await fetch(apiEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              tvIp: selectedTv.ipAddress,
+              command: "openYouTubeSearch",
+              value: searchQuery
+            })
+          })
+
+          if (response.ok) {
+            console.log("[v0] YouTube search opened successfully")
+            setSearchQuery("")
+          } else {
+            const error = await response.json()
+            console.error("[v0] YouTube search error:", error)
+          }
+        } else {
+          // Para JointSpace API (si está disponible)
+          const response = await fetch(apiEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              tvIp: selectedTv.ipAddress,
+              command: "launchApp",
+              value: {
+                intent: {
+                  component: {
+                    packageName: "com.google.android.youtube.tv",
+                    className: "com.google.android.apps.youtube.tv.activity.ShellActivity"
+                  },
+                  action: "android.intent.action.SEARCH",
+                  extras: {
+                    query: searchQuery
+                  }
                 }
               }
-            }
+            })
           })
-        })
 
-        if (response.ok) {
-          setSearchQuery("")
+          if (response.ok) {
+            setSearchQuery("")
+          }
         }
       } else if (currentApp === "com.netflix.ninja") {
-        // Para Netflix, enviamos las teclas para abrir el buscador
+        // Para Netflix: abrir el buscador y escribir
         await sendTvKey("Search")
-        // Pequeña pausa y luego escribimos
-        setTimeout(() => {
-          searchQuery.split("").forEach((char, index) => {
-            setTimeout(() => sendTvKey(char), index * 100)
-          })
-        }, 500)
+
+        // Esperar a que se abra el buscador
+        await new Promise(resolve => setTimeout(resolve, 1000))
+
+        // Escribir cada carácter
+        for (const char of searchQuery) {
+          await sendTvKey(char)
+          await new Promise(resolve => setTimeout(resolve, 150))
+        }
+
         setSearchQuery("")
       }
     } catch (error) {
       console.error("[v0] Error searching:", error)
+      alert("Error al buscar. Revisa la consola para más detalles.")
     } finally {
       setLoading(false)
     }
@@ -189,6 +216,10 @@ export function TvControlEnhanced() {
   const handleTrackpadMove = (e: React.TouchEvent<HTMLDivElement>) => {
     if (!trackpadActive || !selectedTv) return
 
+    // IMPORTANTE: Prevenir scroll de la página
+    e.preventDefault()
+    e.stopPropagation()
+
     const touch = e.touches[0]
     const rect = trackpadRef.current?.getBoundingClientRect()
     if (!rect) return
@@ -200,8 +231,8 @@ export function TvControlEnhanced() {
     const deltaX = x - lastPositionRef.current.x
     const deltaY = y - lastPositionRef.current.y
 
-    // Sensibilidad del trackpad
-    const sensitivity = 3
+    // Sensibilidad del trackpad (aumentada para mejor control)
+    const sensitivity = 5
 
     if (Math.abs(deltaX) > sensitivity || Math.abs(deltaY) > sensitivity) {
       // Determinar dirección principal
@@ -216,6 +247,10 @@ export function TvControlEnhanced() {
   }
 
   const handleTrackpadStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    // IMPORTANTE: Prevenir scroll de la página
+    e.preventDefault()
+    e.stopPropagation()
+
     setTrackpadActive(true)
     const touch = e.touches[0]
     const rect = trackpadRef.current?.getBoundingClientRect()
@@ -227,7 +262,11 @@ export function TvControlEnhanced() {
     }
   }
 
-  const handleTrackpadEnd = () => {
+  const handleTrackpadEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    // IMPORTANTE: Prevenir scroll de la página
+    e.preventDefault()
+    e.stopPropagation()
+
     setTrackpadActive(false)
   }
 
@@ -363,8 +402,14 @@ export function TvControlEnhanced() {
               className={`glass rounded-2xl h-48 flex items-center justify-center cursor-pointer select-none transition-colors ${
                 trackpadActive ? 'bg-primary/10 ring-2 ring-primary' : 'hover:bg-white/5'
               }`}
+              style={{
+                touchAction: 'none',
+                WebkitUserSelect: 'none',
+                userSelect: 'none',
+                WebkitTouchCallout: 'none'
+              }}
             >
-              <div className="text-center text-muted-foreground">
+              <div className="text-center text-muted-foreground pointer-events-none">
                 <div className="text-4xl mb-2">👆</div>
                 <p className="text-sm">Desliza para navegar</p>
                 <p className="text-xs">Toca para seleccionar</p>

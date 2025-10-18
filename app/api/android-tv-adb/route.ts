@@ -149,10 +149,33 @@ export async function POST(request: NextRequest) {
         break
 
       case "openYouTubeSearch":
-        // Abrir YouTube con búsqueda
-        const searchQuery = encodeURIComponent(value || "")
-        adbCommand = `adb -s ${tvAddress} shell am start -a android.intent.action.SEARCH -n com.google.android.youtube.tv/.activity.ShellActivity --es query "${value}"`
-        break
+        // Abrir YouTube con búsqueda directa
+        // Método más confiable: usar el intent de búsqueda de YouTube
+        try {
+          // Primero asegurarnos de que YouTube está abierto
+          await execAsync(`adb -s ${tvAddress} shell monkey -p com.google.android.youtube.tv 1`)
+
+          // Pequeña pausa para que cargue
+          await new Promise(resolve => setTimeout(resolve, 500))
+
+          // Enviar tecla de búsqueda
+          await execAsync(`adb -s ${tvAddress} shell input keyevent KEYCODE_SEARCH`)
+
+          // Otra pausa para que se abra el teclado
+          await new Promise(resolve => setTimeout(resolve, 800))
+
+          // Escribir la búsqueda
+          const escapedQuery = value.replace(/"/g, '\\"').replace(/'/g, "\\'")
+          await execAsync(`adb -s ${tvAddress} shell input text "${escapedQuery.replace(/ /g, '%s')}"`)
+
+          // Presionar Enter para buscar
+          await execAsync(`adb -s ${tvAddress} shell input keyevent KEYCODE_ENTER`)
+
+          return NextResponse.json({ success: true, message: "YouTube search executed" })
+        } catch (error: any) {
+          console.error("[v0] YouTube search error:", error)
+          return NextResponse.json({ error: error.message }, { status: 500 })
+        }
 
       case "setVolume":
         // ADB no permite control directo de volumen, usar teclas
