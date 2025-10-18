@@ -82,6 +82,35 @@ export default function SettingsPage() {
         </div>
 
         <div className="glass-strong rounded-3xl p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Configuración de Smart TVs</h2>
+            <Link href="/tv">
+              <Button variant="ghost" size="sm" className="glass rounded-xl">
+                Ir a Control de TV
+              </Button>
+            </Link>
+          </div>
+          <p className="text-sm text-muted-foreground mb-3">
+            Configura tus Smart TVs desde el panel de control. Puedes agregar múltiples TVs y configurar sus IPs.
+          </p>
+          <div className="glass rounded-2xl p-4">
+            <p className="font-semibold mb-2 text-sm">Cómo encontrar la IP de tu TV Philips:</p>
+            <ol className="list-decimal list-inside space-y-1 text-xs text-muted-foreground">
+              <li>Ve a Configuración en tu TV</li>
+              <li>Selecciona Red o Wireless and Networks</li>
+              <li>Selecciona Ver configuración de red</li>
+              <li>Busca la dirección IP (ej: 192.168.1.100)</li>
+            </ol>
+            <div className="mt-3 p-3 glass-strong rounded-xl">
+              <p className="text-xs font-medium mb-1">Acceso directo:</p>
+              <p className="text-xs text-muted-foreground">
+                En la página de Control de TV, haz clic en "Configurar" para agregar o editar tus TVs.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-strong rounded-3xl p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Instalación en Tablet</h2>
           <div className="space-y-3 text-sm">
             <p className="text-muted-foreground">Para usar esta app en tu tablet Android, sigue estos pasos:</p>
@@ -94,15 +123,6 @@ export default function SettingsPage() {
                 Ejecuta <code className="glass px-2 py-1 rounded">npm install && npm run dev</code>
               </li>
             </ol>
-            <div className="glass rounded-2xl p-4 mt-4">
-              <p className="font-semibold mb-2">Configuración de TV Philips</p>
-              <p className="text-xs text-muted-foreground">
-                Edita las IPs de tus TVs en <code className="glass px-1 rounded">components/tv-control.tsx</code>:
-              </p>
-              <pre className="glass rounded-xl p-3 mt-2 text-xs overflow-x-auto">
-                {`ipAddress: "192.168.100.50" // Tu IP aquí`}
-              </pre>
-            </div>
           </div>
         </div>
 

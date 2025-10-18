@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Plus,
   Star,
+  Settings,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
@@ -28,21 +29,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-
-interface SmartTV {
-  id: string
-  name: string
-  location: string
-  status: boolean
-  volume: number
-  muted: boolean
-  channel: number
-  input: string
-  playing: boolean
-  currentYoutubeChannel?: string
-  ipAddress?: string
-  brand?: "philips" | "samsung" | "lg" | "other"
-}
+import { TvSettingsModal, type SmartTV } from "@/components/tv-settings-modal"
 
 interface YoutubeFavorite {
   id: string
@@ -63,43 +50,49 @@ const streamingApps = [
 const inputs = ["HDMI 1", "HDMI 2", "HDMI 3", "USB", "Chromecast", "YouTube"]
 
 export function TvControl() {
-  const [tvs, setTvs] = useState<SmartTV[]>([
-    {
-      id: "1",
-      name: "Smart TV Sala",
-      location: "Sala de Estar",
-      status: true,
-      volume: 45,
-      muted: false,
-      channel: 105,
-      input: "HDMI 1",
-      playing: false,
-      ipAddress: "192.168.100.50", // Cambia esto a la IP de tu TV
-      brand: "philips",
-    },
-    {
-      id: "2",
-      name: "Smart TV Dormitorio",
-      location: "Dormitorio Principal",
-      status: false,
-      volume: 30,
-      muted: false,
-      channel: 102,
-      input: "HDMI 2",
-      playing: false,
-      ipAddress: "192.168.100.51", // Cambia esto a la IP de tu segundo TV
-      brand: "philips",
-    },
-  ])
-
-  const [selectedTvId, setSelectedTvId] = useState("1")
+  const [tvs, setTvs] = useState<SmartTV[]>([])
+  const [selectedTvId, setSelectedTvId] = useState("")
   const [youtubeFavorites, setYoutubeFavorites] = useState<YoutubeFavorite[]>([])
   const [newChannelName, setNewChannelName] = useState("")
   const [newChannelUrl, setNewChannelUrl] = useState("")
   const [isAddingChannel, setIsAddingChannel] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
 
   const tv = tvs.find((t) => t.id === selectedTvId) || tvs[0]
 
+  // Cargar TVs desde localStorage
+  useEffect(() => {
+    const savedTvs = localStorage.getItem("smartTvs")
+    if (savedTvs) {
+      const parsed = JSON.parse(savedTvs)
+      setTvs(parsed)
+      if (parsed.length > 0 && !selectedTvId) {
+        setSelectedTvId(parsed[0].id)
+      }
+    } else {
+      // TVs por defecto si no hay guardados
+      const defaultTvs: SmartTV[] = [
+        {
+          id: "1",
+          name: "Smart TV Sala",
+          location: "Sala de Estar",
+          status: true,
+          volume: 45,
+          muted: false,
+          channel: 105,
+          input: "HDMI 1",
+          playing: false,
+          ipAddress: "192.168.1.100", // Cambia esto en la configuración
+          brand: "philips",
+        },
+      ]
+      setTvs(defaultTvs)
+      setSelectedTvId(defaultTvs[0].id)
+      localStorage.setItem("smartTvs", JSON.stringify(defaultTvs))
+    }
+  }, [])
+
+  // Cargar favoritos de YouTube
   useEffect(() => {
     const saved = localStorage.getItem("youtubeFavorites")
     if (saved) {
@@ -126,7 +119,17 @@ export function TvControl() {
   }, [])
 
   const updateTv = (updates: Partial<SmartTV>) => {
-    setTvs(tvs.map((t) => (t.id === selectedTvId ? { ...t, ...updates } : t)))
+    const updatedTvs = tvs.map((t) => (t.id === selectedTvId ? { ...t, ...updates } : t))
+    setTvs(updatedTvs)
+    localStorage.setItem("smartTvs", JSON.stringify(updatedTvs))
+  }
+
+  const handleTvsChange = (newTvs: SmartTV[]) => {
+    setTvs(newTvs)
+    // Si el TV seleccionado fue eliminado, seleccionar el primero disponible
+    if (newTvs.length > 0 && !newTvs.find((t) => t.id === selectedTvId)) {
+      setSelectedTvId(newTvs[0].id)
+    }
   }
 
   const sendPhilipsTvCommand = async (command: string, value?: any) => {
@@ -164,7 +167,7 @@ export function TvControl() {
     if (tv.brand === "philips") {
       sendPhilipsTvCommand("sendKey", "Standby")
     }
-    updateTv({ status: !tv.status })
+    updateTv({ status: !tv?.status })
   }
 
   const toggleMute = () => {
@@ -254,74 +257,97 @@ export function TvControl() {
   return (
     <div className="space-y-6">
       <div className="glass-strong rounded-3xl p-4">
-        <p className="text-sm font-medium mb-3">Seleccionar TV</p>
-        <div className="flex gap-3">
-          {tvs.map((t) => (
-            <Button
-              key={t.id}
-              variant={selectedTvId === t.id ? "default" : "outline"}
-              onClick={() => setSelectedTvId(t.id)}
-              className="flex-1 rounded-2xl h-auto p-4 flex flex-col items-start gap-1"
-            >
-              <div className="flex items-center gap-2 w-full">
-                <Tv className="w-4 h-4" />
-                <span className="font-semibold text-sm">{t.name}</span>
-              </div>
-              <span className="text-xs text-muted-foreground">{t.location}</span>
-              <div className="flex items-center gap-1 mt-1">
-                <div
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ backgroundColor: t.status ? "oklch(0.65 0.2 180)" : "oklch(0.4 0.05 250)" }}
-                />
-                <span className="text-xs">{t.status ? "Encendido" : "Apagado"}</span>
-              </div>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-medium">Seleccionar TV</p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowSettings(true)}
+            className="rounded-xl h-8 gap-2"
+          >
+            <Settings className="w-4 h-4" />
+            Configurar
+          </Button>
+        </div>
+        {tvs.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-4">No hay TVs configurados</p>
+            <Button onClick={() => setShowSettings(true)} className="rounded-xl">
+              <Plus className="w-4 h-4 mr-2" />
+              Agregar TV
             </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* TV Status Card */}
-      <div className="glass-strong rounded-3xl p-6">
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center"
-              style={{
-                backgroundColor: tv.status ? "oklch(0.6 0.25 250)/0.2" : "oklch(0.3 0.05 250)",
-              }}
-            >
-              <Tv className="w-8 h-8" style={{ color: tv.status ? "oklch(0.6 0.25 250)" : "oklch(0.5 0.05 250)" }} />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold">{tv.name}</h2>
-              <p className="text-sm text-muted-foreground">{tv.location}</p>
-              <div className="flex items-center gap-2 mt-2">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: tv.status ? "oklch(0.65 0.2 180)" : "oklch(0.4 0.05 250)" }}
-                />
-                <span className="text-xs font-medium">{tv.status ? "Encendido" : "Apagado"}</span>
-              </div>
-            </div>
           </div>
-          <Switch checked={tv.status} onCheckedChange={togglePower} />
-        </div>
-
-        {tv.status && (
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="glass rounded-2xl p-4">
-              <p className="text-muted-foreground mb-1">{tv.input === "YouTube" ? "Reproduciendo" : "Canal Actual"}</p>
-              <p className="text-xl font-bold">{tv.input === "YouTube" ? tv.currentYoutubeChannel : tv.channel}</p>
-            </div>
-            <div className="glass rounded-2xl p-4">
-              <p className="text-muted-foreground mb-1">Entrada</p>
-              <p className="text-lg font-semibold">{tv.input}</p>
-            </div>
+        ) : (
+          <div className="flex gap-3">
+            {tvs.map((t) => (
+              <Button
+                key={t.id}
+                variant={selectedTvId === t.id ? "default" : "outline"}
+                onClick={() => setSelectedTvId(t.id)}
+                className="flex-1 rounded-2xl h-auto p-4 flex flex-col items-start gap-1"
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <Tv className="w-4 h-4" />
+                  <span className="font-semibold text-sm">{t.name}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">{t.location}</span>
+                <div className="flex items-center gap-1 mt-1">
+                  <div
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: t.status ? "oklch(0.65 0.2 180)" : "oklch(0.4 0.05 250)" }}
+                  />
+                  <span className="text-xs">{t.status ? "Encendido" : "Apagado"}</span>
+                </div>
+              </Button>
+            ))}
           </div>
         )}
       </div>
 
-      {tv.status && (
+      {/* TV Status Card - Solo mostrar si hay un TV seleccionado */}
+      {tv && (
+        <>
+          <div className="glass-strong rounded-3xl p-6">
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                  style={{
+                    backgroundColor: tv.status ? "oklch(0.6 0.25 250)/0.2" : "oklch(0.3 0.05 250)",
+                  }}
+                >
+                  <Tv className="w-8 h-8" style={{ color: tv.status ? "oklch(0.6 0.25 250)" : "oklch(0.5 0.05 250)" }} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">{tv.name}</h2>
+                  <p className="text-sm text-muted-foreground">{tv.location}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: tv.status ? "oklch(0.65 0.2 180)" : "oklch(0.4 0.05 250)" }}
+                    />
+                    <span className="text-xs font-medium">{tv.status ? "Encendido" : "Apagado"}</span>
+                  </div>
+                </div>
+              </div>
+              <Switch checked={tv.status} onCheckedChange={togglePower} />
+            </div>
+
+            {tv.status && (
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="glass rounded-2xl p-4">
+                  <p className="text-muted-foreground mb-1">{tv.input === "YouTube" ? "Reproduciendo" : "Canal Actual"}</p>
+                  <p className="text-xl font-bold">{tv.input === "YouTube" ? tv.currentYoutubeChannel : tv.channel}</p>
+                </div>
+                <div className="glass rounded-2xl p-4">
+                  <p className="text-muted-foreground mb-1">Entrada</p>
+                  <p className="text-lg font-semibold">{tv.input}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {tv.status && (
         <>
           <div className="glass-strong rounded-3xl p-6 space-y-4">
             <div className="flex items-center justify-between">
@@ -554,7 +580,17 @@ export function TvControl() {
             </div>
           </div>
         </>
+          )}
+        </>
       )}
+
+      {/* Modal de Configuración */}
+      <TvSettingsModal
+        open={showSettings}
+        onOpenChange={setShowSettings}
+        tvs={tvs}
+        onTvsChange={handleTvsChange}
+      />
     </div>
   )
 }
