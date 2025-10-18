@@ -205,14 +205,54 @@ export function TvSettingsModal({ open, onOpenChange, tvs, onTvsChange }: TvSett
     if (!tv.ipAddress) return
 
     setPairingTvId(tv.id)
-    setPairingStep("waiting_code")
-    setPairingMessage(`
-      En tu TV ${tv.name}:
-      1. Ve a Configuración → Opciones para desarrolladores
-      2. Entra en "Depuración inalámbrica"
-      3. Haz clic en "Vincular dispositivo con código"
-      4. Ingresa el PUERTO y CÓDIGO que aparecen en el TV
-    `)
+    setPairingStep("pairing")
+    setPairingMessage("Verificando conexión con el TV...")
+
+    try {
+      // Primero intentar conectar sin pairing (puede que ya esté vinculado)
+      const response = await fetch("/api/android-tv-adb", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tvIp: tv.ipAddress,
+          command: "checkConnection",
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.connected) {
+        // Ya está conectado, no necesita pairing
+        setPairingStep("success")
+        setPairingMessage("¡Conexión exitosa! El TV ya estaba vinculado. Puedes controlarlo ahora.")
+        setConnectionStatus({ ...connectionStatus, [tv.id]: "success" })
+
+        setTimeout(() => {
+          setPairingTvId(null)
+          setPairingStep("idle")
+        }, 2000)
+      } else {
+        // Necesita pairing
+        setPairingStep("waiting_code")
+        setPairingMessage(`
+          En tu TV ${tv.name}:
+          1. Ve a Configuración → Opciones para desarrolladores
+          2. Entra en "Depuración inalámbrica"
+          3. Haz clic en "Vincular dispositivo con código"
+          4. Ingresa el PUERTO y CÓDIGO que aparecen en el TV
+        `)
+      }
+    } catch (error: any) {
+      // Si falla la verificación, pedir pairing manual
+      setPairingStep("waiting_code")
+      setPairingMessage(`
+        En tu TV ${tv.name}:
+        1. Ve a Configuración → Opciones para desarrolladores
+        2. Entra en "Depuración inalámbrica"
+        3. Haz clic en "Vincular dispositivo con código"
+        4. Ingresa el PUERTO y CÓDIGO que aparecen en el TV
+      `)
+    }
   }
 
   const executeAdbPairing = async (tv: SmartTV) => {

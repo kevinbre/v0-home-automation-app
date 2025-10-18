@@ -63,6 +63,40 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: error.message || "Pairing failed" }, { status: 500 })
         }
 
+      case "checkConnection":
+        // Verificar si ya está conectado
+        try {
+          const { stdout } = await execAsync(`adb devices`)
+          const isConnected = stdout.includes(tvAddress) && stdout.includes("device")
+
+          if (isConnected) {
+            return NextResponse.json({ success: true, connected: true, message: "Already connected" })
+          }
+
+          // Intentar conectar
+          await execAsync(`adb connect ${tvAddress}`)
+
+          // Verificar de nuevo
+          const { stdout: stdout2 } = await execAsync(`adb devices`)
+          const isNowConnected = stdout2.includes(tvAddress) && stdout2.includes("device")
+
+          if (isNowConnected) {
+            return NextResponse.json({ success: true, connected: true, message: "Connected successfully" })
+          } else {
+            return NextResponse.json({
+              success: false,
+              connected: false,
+              message: "Connection failed - pairing required"
+            }, { status: 401 })
+          }
+        } catch (error: any) {
+          return NextResponse.json({
+            success: false,
+            connected: false,
+            message: error.message
+          }, { status: 500 })
+        }
+
       default:
         // Para todos los demás comandos, asegurarse de estar conectado primero
         try {

@@ -42,15 +42,23 @@ const AVAILABLE_APPS: TVApp[] = [
 ]
 
 export function TvYoutubeControl() {
-  const [tvIp, setTvIp] = useState("192.168.100.50")
+  const [tvIp, setTvIp] = useState("192.168.100.228")
+  const [useAdb, setUseAdb] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
-    // Load saved TV IP
-    const saved = localStorage.getItem("philipsTvIp")
-    if (saved) setTvIp(saved)
+    // Cargar configuración del TV desde localStorage
+    const savedTvs = localStorage.getItem("smartTvs")
+    if (savedTvs) {
+      const tvs = JSON.parse(savedTvs)
+      if (tvs.length > 0) {
+        const firstTv = tvs[0]
+        setTvIp(firstTv.ipAddress || "192.168.100.228")
+        setUseAdb(firstTv.useAdb || false)
+      }
+    }
   }, [])
 
   const saveTvIp = () => {
@@ -60,7 +68,8 @@ export function TvYoutubeControl() {
   const launchApp = async (app: TVApp) => {
     setLoading(true)
     try {
-      const response = await fetch("/api/philips-tv", {
+      const apiEndpoint = useAdb ? "/api/android-tv-adb" : "/api/philips-tv"
+      const response = await fetch(apiEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -70,7 +79,7 @@ export function TvYoutubeControl() {
             intent: {
               component: {
                 packageName: app.packageName,
-                className: app.packageName === "com.google.android.youtube.tv" 
+                className: app.packageName === "com.google.android.youtube.tv"
                   ? "com.google.android.apps.youtube.tv.activity.ShellActivity"
                   : undefined
               },
@@ -95,13 +104,14 @@ export function TvYoutubeControl() {
 
     setLoading(true)
     try {
-      const response = await fetch("/api/philips-tv", {
+      const apiEndpoint = useAdb ? "/api/android-tv-adb" : "/api/philips-tv"
+      const response = await fetch(apiEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tvIp,
-          command: "launchApp",
-          value: {
+          command: useAdb ? "openYouTubeSearch" : "launchApp",
+          value: useAdb ? searchQuery : {
             intent: {
               component: {
                 packageName: "com.google.android.youtube.tv",
@@ -128,7 +138,8 @@ export function TvYoutubeControl() {
 
   const sendTvKey = async (key: string) => {
     try {
-      await fetch("/api/philips-tv", {
+      const apiEndpoint = useAdb ? "/api/android-tv-adb" : "/api/philips-tv"
+      await fetch(apiEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
