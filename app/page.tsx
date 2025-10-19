@@ -5,6 +5,9 @@ import { WeatherWidget } from "@/components/weather-widget"
 import { CalendarWidget } from "@/components/calendar-widget"
 import { HueLightsWidget } from "@/components/hue-lights-widget"
 import { TvControlEnhanced } from "@/components/tv-control-enhanced"
+import { TimerWidget } from "@/components/timer-widget"
+import { SpotifyPlayer } from "@/components/spotify-player"
+import { AlexaWrapper } from "@/components/alexa-wrapper"
 
 
 export default function HomePage() {
@@ -29,11 +32,20 @@ export default function HomePage() {
             <HueLightsWidget />
           </div>
 
+          {/* Spotify Player - Ocupa todo el ancho */}
+          <SpotifyPlayer />
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <TvControlEnhanced />
             <YoutubeSection />
           </div>
+
+          {/* Temporizadores - Abajo */}
+          <TimerWidget />
         </div>
+
+        {/* Asistente de voz Alexa - Flotante en la esquina */}
+        <AlexaWrapper />
       </div>
     </div>
   )
